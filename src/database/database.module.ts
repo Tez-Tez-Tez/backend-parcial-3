@@ -25,6 +25,9 @@ import { VehiclesEntity } from 'src/vehicles/entity/vehicles.entity';
       username: config.get('config.db.user'),
       database: config.get('config.db.name'),
       password: config.get('config.db.password'),
+      ssl: config.get('config.db.ssl') === 'true' ? {
+  rejectUnauthorized: false,
+} : undefined,
       connectorPackage: 'mysql2',
       entities: [
         UsersEntity,

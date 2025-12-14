@@ -8,6 +8,7 @@ export default registerAs ('config',()=>({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
         name: process.env.DB_NAME,
-        password: process.env.DB_PASSWORD
+        password: process.env.DB_PASSWORD,
+        ssl: process.env.DB_SSL
     }
 }))
