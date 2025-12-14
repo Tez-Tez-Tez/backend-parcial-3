@@ -1,8 +1,8 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Min } from "class-validator";
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from "class-validator";
 import { Roles } from "../entity/users.entity";
 
 
-export class CreateUser{
+export class CreateUser {
 
     @IsNotEmpty()
     @IsEmail()
@@ -10,7 +10,7 @@ export class CreateUser{
 
     @IsString()
     @IsNotEmpty()
-    @Min(3)
+    @MinLength(3, { message: 'La contraseña debe tener al menos 3 caracteres' })
     password: string;
 
     @IsString()
@@ -18,27 +18,27 @@ export class CreateUser{
     role?: Roles;
 }
 
-export class UpdateUser{
+export class UpdateUser {
 
     @IsEmail()
     @IsOptional()
     mail?: string;
 
     @IsString()
-    @Min(3)
+    @MinLength(3, { message: 'La contraseña debe tener al menos 3 caracteres' })
     @IsOptional()
     password?: string;
 
 }
 
-export class Login{
+export class Login {
 
     @IsEmail()
     @IsNotEmpty()
     mail: string;
 
     @IsString()
-    @Min(3)
+    @MinLength(3, { message: 'La contraseña debe tener al menos 3 caracteres' })
     @IsNotEmpty()
     password: string;
 
