@@ -1,0 +1,247 @@
+### Variables
+@baseUrl = https://backend-parcial-3-production.up.railway.app
+# @baseUrl = http://localhost:8080
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NCwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzY1Njc4NjYzLCJleHAiOjE3NjU2ODIyNjN9.6u-GgUyKNpMIC4UYUHNZwTMHLaVntzk5fXkKE9qWQsE
+
+### ============================================
+### AUTH - Registro y Login
+### ============================================
+
+### 1. Registrar nuevo usuario
+POST {{baseUrl}}/auth
+Content-Type: application/json
+
+{
+  "mail": "test@example.com",
+  "password": "password123"
+}
+
+### 2. Registrar admin
+POST {{baseUrl}}/auth
+Content-Type: application/json
+
+{
+  "mail": "admin@example.com",
+  "password": "admin123",
+  "role": "admin"
+}
+
+### 3. Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "mail": "admin@example.com",
+  "password": "admin123"
+}
+
+### ============================================
+### BOOKING RULES - Reglas de Reserva
+### ============================================
+
+### 4. Crear regla global
+POST {{baseUrl}}/booking-rules
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "maxDuration": 120,
+  "minAnticipation": 30,
+  "allowedStartHour": "08:00",
+  "allowedEndHour": "18:00",
+  "blockedDays": [0, 6],
+  "maxActiveBookingsPerUser": 5
+}
+
+### 5. Crear regla para ROOM
+POST {{baseUrl}}/booking-rules
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceType": "ROOM",
+  "maxDuration": 180,
+  "minAnticipation": 60,
+  "allowedStartHour": "08:00",
+  "allowedEndHour": "20:00",
+  "blockedDays": [0],
+  "maxActiveBookingsPerUser": 3
+}
+
+### 6. Crear regla específica para recurso
+POST {{baseUrl}}/booking-rules
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceType": "VEHICLE",
+  "resourceId": 1,
+  "maxDuration": 480,
+  "minAnticipation": 120,
+  "allowedStartHour": "06:00",
+  "allowedEndHour": "22:00",
+  "blockedDays": [],
+  "maxActiveBookingsPerUser": 2
+}
+
+### 7. Obtener todas las reglas
+GET {{baseUrl}}/booking-rules
+Authorization: Bearer {{token}}
+
+### 8. Obtener regla por ID
+GET {{baseUrl}}/booking-rules/1
+Authorization: Bearer {{token}}
+
+### 9. Actualizar regla
+PUT {{baseUrl}}/booking-rules/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "maxDuration": 150,
+  "allowedEndHour": "19:00"
+}
+
+### 10. Eliminar regla
+DELETE {{baseUrl}}/booking-rules/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### BOOKINGS - Reservas
+### ============================================
+
+### 11. Crear reserva
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceId": 1,
+  "resourceType": "ROOM",
+  "startDate": "2025-12-20T10:00:00.000Z",
+  "endDate": "2025-12-20T12:00:00.000Z",
+  "purpose": "Reunión de equipo"
+}
+
+### 12. Actualizar reserva
+PATCH {{baseUrl}}/bookings/1
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "startDate": "2025-12-20T11:00:00.000Z",
+  "endDate": "2025-12-20T13:00:00.000Z",
+  "purpose": "Reunión de equipo - Actualizada"
+}
+
+### 13. Cancelar reserva
+DELETE {{baseUrl}}/bookings/1
+Authorization: Bearer {{token}}
+
+### 14. Buscar recursos disponibles
+GET {{baseUrl}}/bookings/available?start=2025-12-20T08:00:00.000Z&end=2025-12-20T10:00:00.000Z&type=ROOM
+Authorization: Bearer {{token}}
+
+### 15. Historial de usuario
+GET {{baseUrl}}/bookings/history/user/1
+Authorization: Bearer {{token}}
+
+### 16. Historial de recurso
+GET {{baseUrl}}/bookings/history/resource/1?resourceType=ROOM
+Authorization: Bearer {{token}}
+
+### ============================================
+### RESOURCES - Recursos
+### ============================================
+
+### 17. Obtener todos los recursos con filtros
+GET {{baseUrl}}/resources?type=ROOM&status=available&sortBy=name&order=ASC
+Authorization: Bearer {{token}}
+
+### 18. Filtrar solo vehículos
+GET {{baseUrl}}/resources?type=VEHICLE
+Authorization: Bearer {{token}}
+
+### 19. Filtrar por estado
+GET {{baseUrl}}/resources?status=maintenance
+Authorization: Bearer {{token}}
+
+### ============================================
+### ADMIN - Dashboard Administrativo
+### ============================================
+
+### 20. Obtener estadísticas de reservas (Admin only)
+GET {{baseUrl}}/admin/stats
+Authorization: Bearer {{token}}
+
+### 21. Obtener estado de recursos en tiempo real (Admin only)
+GET {{baseUrl}}/admin/resources/status
+Authorization: Bearer {{token}}
+
+### 22. Obtener snapshot de recursos (Admin only)
+GET {{baseUrl}}/admin/resources/snapshot
+Authorization: Bearer {{token}}
+
+### 23. Forzar cancelación de reserva (Admin only)
+POST {{baseUrl}}/admin/bookings/1/force-cancel
+Authorization: Bearer {{token}}
+
+### ============================================
+### TESTS DE VALIDACIÓN
+### ============================================
+
+### 24. Test: Reserva con solapamiento (debe fallar)
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceId": 1,
+  "resourceType": "ROOM",
+  "startDate": "2025-12-20T10:30:00.000Z",
+  "endDate": "2025-12-20T11:30:00.000Z"
+}
+
+### 25. Test: Reserva fuera de horario (debe fallar)
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceId": 1,
+  "resourceType": "ROOM",
+  "startDate": "2025-12-20T22:00:00.000Z",
+  "endDate": "2025-12-20T23:00:00.000Z"
+}
+
+### 26. Test: Reserva en día bloqueado (debe fallar si es domingo)
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceId": 1,
+  "resourceType": "ROOM",
+  "startDate": "2025-12-21T10:00:00.000Z",
+  "endDate": "2025-12-21T12:00:00.000Z"
+}
+
+### 27. Test: Duración excedida (debe fallar)
+POST {{baseUrl}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceId": 1,
+  "resourceType": "ROOM",
+  "startDate": "2025-12-20T08:00:00.000Z",
+  "endDate": "2025-12-20T14:00:00.000Z"
+}
+
+### ============================================
+### SWAGGER DOCUMENTATION
+### ============================================
+
+### 28. Ver documentación Swagger
+# GET {{baseUrl}}/api/docs
+# Abrir en navegador
