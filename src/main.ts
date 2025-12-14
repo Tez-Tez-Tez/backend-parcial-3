@@ -10,7 +10,10 @@ async function bootstrap() {
   // Security
   app.use(helmet());
   app.enableCors({
-    origin: '*',
+    origin: [
+      'https://backend-parcial-3-production.up.railway.app',
+      'http://localhost:8080',
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

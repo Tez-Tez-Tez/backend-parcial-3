@@ -13,6 +13,9 @@ import { BookingRulesService } from 'src/booking-rules/booking-rules.service';
 import { ResourcesEntity } from 'src/resources/entity/resources.entity';
 import { BookingsGateway } from './bookings.gateway';
 import { Status, TypeResource } from 'src/common/enums/resource.enums';
+import { RoomsEntity } from 'src/rooms/entity/rooms.entity';
+import { VehiclesEntity } from 'src/vehicles/entity/vehicles.entity';
+import { EquipmentEntity } from 'src/equipment/entity/equipment.entity';
 
 @Injectable()
 export class BookingsService {
@@ -103,7 +106,7 @@ export class BookingsService {
     });
 
     const saved = await this.bookingRepo.save(booking);
-    this.bookingsGateway.server.emit('booking.created', saved);
+    this.bookingsGateway.emitBookingCreated(saved);
     return saved;
   }
 
@@ -152,26 +155,92 @@ export class BookingsService {
 
     booking.status = BookingStatus.CANCELLED;
     const savedBooking = await this.bookingRepo.save(booking);
-    this.bookingsGateway.server.emit('booking.cancelled', savedBooking);
+    this.bookingsGateway.emitBookingCancelled(savedBooking);
     return savedBooking;
   }
 
-  async findAvailableResources(start: Date, end: Date, type?: string): Promise<any[]> {
-    // Subquery to find booked resource IDs in the range
-    const bookedQuery = this.bookingRepo
-      .createQueryBuilder('b')
-      .select('b.resource_id')
-      .where('b.status IN (:...statuses)', { statuses: [BookingStatus.PENDING, BookingStatus.CONFIRMED] })
-      .andWhere('b.resourceType = r.type') // Correlate with outer query if needed, but easier to do exclusion
-      .andWhere('b.start_date < :end', { end })
-      .andWhere('b.end_date > :start', { start })
-      .getQuery();
+  async findAvailableResources(start: Date, end: Date, type?: TypeResource): Promise<any[]> {
+    // Build base query for resources
+    let resourcesQuery = this.resourceRepo.createQueryBuilder('r');
 
-    // Main query: All resources NOT IN booked
-    // Note: We need a way to select from ResourcesEntity. 
-    // Since BookingsService injects BookingsEntity, we might need to inject ResourcesManager or Repository.
-    // For now, I'll use the EntityManager or assume we can query ResourcesEntity.
-    // Better approach: Inject ResourcesRepository.
-    return []; // Placeholder until dependency injection is fixed
+    // Filter by type if specified
+    if (type) {
+      resourcesQuery = resourcesQuery.where('r.type = :type', { type });
+    }
+
+    const allResources = await resourcesQuery.getMany();
+
+    // For each resource, check if it's available
+    const availableResources = [];
+
+    for (const resource of allResources) {
+      // Check for conflicting bookings
+      const conflict = await this.bookingRepo.findOne({
+        where: {
+          resourceId: resource.id,
+          resourceType: resource.type,
+          status: In([BookingStatus.PENDING, BookingStatus.CONFIRMED]),
+          startDate: LessThan(end),
+          endDate: MoreThan(start),
+        },
+      });
+
+      if (!conflict) {
+        // Get the specific resource details based on type
+        let resourceDetails: any = { id: resource.id, type: resource.type };
+
+        if (resource.type === TypeResource.room) {
+          const room = await this.resourceRepo.manager.getRepository(RoomsEntity).findOne({
+            where: { resource: { id: resource.id } },
+          });
+          if (room && room.status === Status.available) {
+            resourceDetails = { ...resourceDetails, ...room };
+          } else {
+            continue; // Skip if not available
+          }
+        } else if (resource.type === TypeResource.vehicle) {
+          const vehicle = await this.resourceRepo.manager.getRepository(VehiclesEntity).findOne({
+            where: { resource: { id: resource.id } },
+          });
+          if (vehicle && vehicle.status === Status.available) {
+            resourceDetails = { ...resourceDetails, ...vehicle };
+          } else {
+            continue;
+          }
+        } else if (resource.type === TypeResource.equipment) {
+          const equipment = await this.resourceRepo.manager.getRepository(EquipmentEntity).findOne({
+            where: { resource: { id: resource.id } },
+          });
+          if (equipment && equipment.status === Status.available) {
+            resourceDetails = { ...resourceDetails, ...equipment };
+          } else {
+            continue;
+          }
+        }
+
+        availableResources.push(resourceDetails);
+      }
+    }
+
+    return availableResources;
+  }
+
+  async getUserHistory(userId: number): Promise<BookingsEntity[]> {
+    return this.bookingRepo.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+      relations: ['user'],
+    });
+  }
+
+  async getResourceHistory(resourceId: number, resourceType: TypeResource): Promise<BookingsEntity[]> {
+    return this.bookingRepo.find({
+      where: {
+        resourceId,
+        resourceType,
+      },
+      order: { createdAt: 'DESC' },
+      relations: ['user'],
+    });
   }
 }
