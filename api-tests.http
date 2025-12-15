@@ -238,6 +238,21 @@ Authorization: Bearer {{token}}
   "endDate": "2025-12-20T14:00:00.000Z"
 }
 
+### 28. Crear regla específica para ROOM
+POST {{baseUrl}}/booking-rules
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "resourceType": "ROOM",
+  "maxDuration": 720,
+  "minAnticipation": 30,
+  "allowedStartHour": "06:00",
+  "allowedEndHour": "23:00",
+  "blockedDays": [],
+  "maxActiveBookingsPerUser": 5
+}
+
 ### ============================================
 ### SWAGGER DOCUMENTATION
 ### ============================================

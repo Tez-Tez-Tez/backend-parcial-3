@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request, Patch, Param, ParseIntPipe, Delete, Get, Query } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Patch, Param, ParseIntPipe, Delete, Get, Query,ForbiddenException } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto, UpdateBookingDto } from './dto/bookings.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -97,9 +97,13 @@ export class BookingsController {
     @ApiParam({ name: 'userId', description: 'ID del usuario' })
     @UseGuards(AuthGuard('jwt'))
     @Get('history/user/:userId')
-    async getUserHistory(@Param('userId', ParseIntPipe) userId: number) {
-        return this.bookingsService.getUserHistory(userId);
+    async getUserHistory(@Param('userId', ParseIntPipe) userId: number, @Request() req) {
+    // Solo admins o el mismo usuario pueden ver su historial
+    if (req.user.role !== 'admin' && req.user.id !== userId) {
+        throw new ForbiddenException('No puedes ver el historial de otros usuarios');
     }
+    return this.bookingsService.getUserHistory(userId);
+}
 
     @ApiOperation({ summary: 'Obtener historial de reservas de un recurso' })
     @ApiResponse({ status: 200, description: 'Historial de reservas del recurso' })

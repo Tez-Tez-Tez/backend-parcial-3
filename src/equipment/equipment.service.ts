@@ -51,9 +51,14 @@ export class EquipmentService {
     }
 
     async update(id: number, dto: UpdateEquipmentDto): Promise<EquipmentEntity> {
-        const equipment = await this.findOne(id);
+        const equipment = await this.equipmentRepo.preload({
+            id,
+            ...dto,
+        });
 
-        Object.assign(equipment, dto);
+        if (!equipment) {
+            throw new NotFoundException(`Equipo con ID ${id} no encontrado`);
+        }
 
         return this.equipmentRepo.save(equipment);
     }

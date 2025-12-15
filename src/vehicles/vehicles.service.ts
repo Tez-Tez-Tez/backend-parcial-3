@@ -51,9 +51,14 @@ export class VehiclesService {
     }
 
     async update(id: number, dto: UpdateVehicleDto): Promise<VehiclesEntity> {
-        const vehicle = await this.findOne(id);
+        const vehicle = await this.vehicleRepo.preload({
+            id,
+            ...dto,
+        });
 
-        Object.assign(vehicle, dto);
+        if (!vehicle) {
+            throw new NotFoundException(`Vehículo con ID ${id} no encontrado`);
+        }
 
         return this.vehicleRepo.save(vehicle);
     }

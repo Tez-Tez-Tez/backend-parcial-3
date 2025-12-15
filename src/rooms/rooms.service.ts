@@ -51,9 +51,14 @@ export class RoomsService {
     }
 
     async update(id: number, dto: UpdateRoomDto): Promise<RoomsEntity> {
-        const room = await this.findOne(id);
+        const room = await this.roomRepo.preload({
+            id,
+            ...dto,
+        });
 
-        Object.assign(room, dto);
+        if (!room) {
+            throw new NotFoundException(`Sala con ID ${id} no encontrada`);
+        }
 
         return this.roomRepo.save(room);
     }
