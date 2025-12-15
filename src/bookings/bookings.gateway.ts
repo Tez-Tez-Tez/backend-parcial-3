@@ -50,16 +50,6 @@ export class BookingsGateway implements OnGatewayConnection, OnGatewayDisconnect
         return { event: 'subscribed', channel: 'equipment' };
     }
 
-    // Legacy support - join any room
-    @SubscribeMessage('joinRoom')
-    handleJoinRoom(
-        @MessageBody() room: string,
-        @ConnectedSocket() client: Socket,
-    ) {
-        client.join(room);
-        return { event: 'joinedRoom', room };
-    }
-
     // Emit booking created event
     emitBookingCreated(booking: any) {
         this.server.emit('booking.created', booking);
