@@ -1,4 +1,5 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+```typescript
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUser, Login } from 'src/users/dto/users.dto';
 import { UsersEntity } from 'src/users/entity/users.entity';
@@ -6,25 +7,10 @@ import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { access } from 'fs';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
-    constructor(private authService: UsersService,
-private jwtService:JwtService){}
-
-    async register(dto:CreateUser){
-        try{
-        if(!dto){
-            throw new BadRequestException("Datos necesarios para registrarse")
-        }
-        const salt = await bcrypt.genSalt(10)
-        dto.password = await bcrypt.hash(dto.password,salt)
-        const user= await this.authService.createUser(dto);
-        if(!user){
-            throw new NotFoundException("Error al crear usuario")
-        }
-        return user;
-    }catch(err){
         throw err;
     }
     }
