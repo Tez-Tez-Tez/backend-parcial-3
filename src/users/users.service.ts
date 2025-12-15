@@ -24,6 +24,11 @@ export class UsersService {
         return user;
     }
 
+    // BUSQUEDA DE EMAIL PARA CREAR NUEVO USUARIO
+    async findUserByMail(mail: string) {
+    return await this.userRepo.findOne({ where: { mail } });
+    }
+
     async getUserFromMail(mail:string){
         const user = await this.userRepo.findOne({where:{mail}})
         if(!user){

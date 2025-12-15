@@ -19,7 +19,7 @@ export class AuthService {
             }
 
             // Check if email already exists
-            const existingUser = await this.authService.getUserFromMail(dto.mail);
+            const existingUser = await this.authService.findUserByMail(dto.mail);
             if (existingUser) {
                 throw new BadRequestException('El correo electrónico ya está registrado');
             }
